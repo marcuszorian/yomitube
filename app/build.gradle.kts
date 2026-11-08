@@ -122,6 +122,13 @@ configure<ApplicationExtension> {
         getByName("androidTest") {
             assets.directories += "$projectDir/schemas"
         }
+        // Mining fork: YomiTube branding (icons, app-facing strings). Build-type source sets
+        // take priority over "main", so these files override NewPipe's without editing them.
+        listOf("debug", "release", "continuous").forEach { buildType ->
+            getByName(buildType) {
+                res.directories += "src/fork/res"
+            }
+        }
     }
 
     androidResources {

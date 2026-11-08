@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- YomiTube: replaces NewPipe's logo on the splash screen -->
+<bitmap xmlns:android="http://schemas.android.com/apk/res/android"
+    android:gravity="fill"
+    android:src="@drawable/yomitube_splash_glyph" />
