@@ -69,7 +69,7 @@ jobs:
       - name: Unit tests, checkstyle, ktlint, APK
         run: >
           ./gradlew testDebugUnitTest runCheckstyle runKtlint assembleContinuous
-          --stacktrace -DskipFormatKtlint
+          --stacktrace --profile -DskipFormatKtlint
 
       - name: Upload APK
         uses: actions/upload-artifact@v7
@@ -77,6 +77,15 @@ jobs:
           name: YomiTube-continuous-${{ github.run_number }}
           path: app/build/outputs/apk/continuous/*.apk
           retention-days: 30
+
+      # Per-task timings (--profile), to see where the build time goes.
+      - name: Upload build profile
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: build-profile-${{ github.run_number }}
+          path: build/reports/profile/**
+          retention-days: 14
 
       - name: Upload test reports
         if: failure()
