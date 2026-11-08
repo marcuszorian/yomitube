@@ -64,7 +64,9 @@ dependencies {
 
     // Pinned by NewPipe
     implementation(libs.newpipe.extractor)
+    implementation(libs.androidx.appcompat)
     implementation(libs.androidx.core)
+    implementation(libs.androidx.preference)
     implementation(libs.google.android.material)
     implementation(libs.google.exoplayer.core)
     implementation(libs.google.exoplayer.datasource)

@@ -92,6 +92,12 @@
             android:exported="false"
             android:label="@string/settings" />
 
+        <!-- Mining fork -->
+        <activity
+            android:name=".settings.MiningSettingsActivity"
+            android:exported="false"
+            android:label="@string/pref_mining_header" />
+
         <activity
             android:name=".about.AboutActivity"
             android:exported="false"

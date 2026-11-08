@@ -67,4 +67,8 @@
     <string name="pref_anki_install">Install AnkiDroid</string>
     <string name="pref_anki_model">Note type</string>
     <string name="pref_anki_deck">Deck</string>
+    <string name="pref_mining_summary">Add cards to AnkiDroid from video captions</string>
+    <string name="pref_mining_attribution">Dictionary and tokenizer</string>
+    <string name="pref_mining_attribution_summary">Dictionary: JMdict, © Electronic Dictionary Research and Development Group, CC BY-SA 4.0. Word splitting: Kuromoji (Apache 2.0) with IPADIC. Tap for the full notices.</string>
+    <string name="pref_mining_notices_jmdict">This app uses the JMdict dictionary files. These files are the property of the Electronic Dictionary Research and Development Group (EDRDG), and are used in conformance with the Group\'s licence (https://www.edrdg.org/edrdg/licence.html), Creative Commons Attribution-ShareAlike 4.0. Converted with jmdict-simplified (https://github.com/scriptin/jmdict-simplified).</string>
 </resources>

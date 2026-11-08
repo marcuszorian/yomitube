@@ -1,6 +1,7 @@
 package org.schabi.newpipe.player.ui
 
 import android.app.Activity
+import android.content.Intent
 import android.util.Log
 import android.view.View
 import com.google.android.exoplayer2.C
@@ -17,8 +18,8 @@ import org.schabi.newpipe.mining.PlaybackControl
 import org.schabi.newpipe.player.Player
 import org.schabi.newpipe.player.helper.PlayerDataSource
 import org.schabi.newpipe.player.helper.PlayerHelper
+import org.schabi.newpipe.settings.MiningSettingsActivity
 import org.schabi.newpipe.util.ExtractorHelper
-import org.schabi.newpipe.util.NavigationHelper
 
 /**
  * Mining fork: connects the sentence-mining feature (module `:mining`) to NewPipe's main player.
@@ -143,7 +144,7 @@ class MiningPlayerUi(player: Player) : PlayerUi(player), MiningController.Host {
     }
 
     override fun openSettings() {
-        getActivity()?.let { NavigationHelper.openSettings(it) }
+        getActivity()?.let { it.startActivity(Intent(it, MiningSettingsActivity::class.java)) }
     }
 
     // ------------------------------------------------------------------ PlaybackControl

@@ -10,6 +10,14 @@
         android:title="@string/settings_category_video_audio_title"
         app:iconSpaceReserved="false" />
 
+    <!-- Mining fork -->
+    <PreferenceScreen
+        android:fragment="org.schabi.newpipe.settings.MiningSettingsFragment"
+        android:icon="@drawable/ic_mining_24dp"
+        android:summary="@string/pref_mining_summary"
+        android:title="@string/pref_mining_header"
+        app:iconSpaceReserved="false" />
+
     <PreferenceScreen
         android:fragment="org.schabi.newpipe.settings.DownloadSettingsFragment"
         android:icon="@drawable/ic_file_download"

@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Mining fork: "Sentence mining" settings screen. Keys match AnkiExporter / MiningPreferences. -->
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:key="mining_preferences"
+    android:title="@string/pref_mining_header">
+
+    <Preference
+        android:key="ankiStatus"
+        android:selectable="false"
+        android:title="@string/pref_anki_status"
+        app:iconSpaceReserved="false"
+        app:singleLineTitle="false" />
+
+    <Preference
+        android:key="ankiPermission"
+        android:summary="@string/pref_anki_permission_summary"
+        android:title="@string/pref_anki_permission"
+        app:iconSpaceReserved="false"
+        app:isPreferenceVisible="false"
+        app:singleLineTitle="false" />
+
+    <ListPreference
+        android:enabled="false"
+        android:key="ankiModelId"
+        android:title="@string/pref_anki_model"
+        app:iconSpaceReserved="false"
+        app:useSimpleSummaryProvider="true" />
+
+    <ListPreference
+        android:enabled="false"
+        android:key="ankiDeckId"
+        android:title="@string/pref_anki_deck"
+        app:iconSpaceReserved="false"
+        app:useSimpleSummaryProvider="true" />
+
+    <Preference
+        android:key="miningAttribution"
+        android:summary="@string/pref_mining_attribution_summary"
+        android:title="@string/pref_mining_attribution"
+        app:iconSpaceReserved="false"
+        app:singleLineTitle="false" />
+
+</PreferenceScreen>

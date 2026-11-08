@@ -1,2 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest />
+<!-- Mining fork: merged into NewPipe's manifest. -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Add notes through AnkiDroid's API -->
+    <uses-permission android:name="com.ichi2.anki.permission.READ_WRITE_DATABASE" />
+
+    <queries>
+        <!-- AnkiDroid (status, note types, decks) -->
+        <package android:name="com.ichi2.anki" />
+        <provider android:authorities="com.ichi2.anki.flashcards" />
+        <!-- Text-to-speech engines for word audio; hidden on Android 11+ without this -->
+        <intent>
+            <action android:name="android.intent.action.TTS_SERVICE" />
+        </intent>
+    </queries>
+
+    <application>
+        <!-- Hands audio clips and pictures to AnkiDroid -->
+        <provider
+            android:name="org.schabi.newpipe.mining.ClipFileProvider"
+            android:authorities="${applicationId}.miningclips"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/mining_clip_paths" />
+        </provider>
+    </application>
+</manifest>
