@@ -43,6 +43,7 @@ import androidx.appcompat.content.res.AppCompatResources;
 import androidx.appcompat.view.ContextThemeWrapper;
 import androidx.appcompat.widget.AppCompatImageButton;
 import androidx.appcompat.widget.PopupMenu;
+import androidx.core.content.ContextCompat;
 import androidx.core.graphics.BitmapCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.math.MathUtils;
@@ -182,9 +183,9 @@ public abstract class VideoPlayerUi extends PlayerUi implements SeekBar.OnSeekBa
                 .setText(PlayerHelper.resizeTypeOf(context, binding.surfaceView.getResizeMode()));
 
         binding.playbackSeekBar.getThumb()
-                .setColorFilter(new PorterDuffColorFilter(Color.RED, PorterDuff.Mode.SRC_IN));
-        binding.playbackSeekBar.getProgressDrawable()
-                .setColorFilter(new PorterDuffColorFilter(Color.RED, PorterDuff.Mode.MULTIPLY));
+                .setColorFilter(new PorterDuffColorFilter(seekbarColor(), PorterDuff.Mode.SRC_IN));
+        binding.playbackSeekBar.getProgressDrawable().setColorFilter(
+                new PorterDuffColorFilter(seekbarColor(), PorterDuff.Mode.MULTIPLY));
 
         final ContextThemeWrapper themeWrapper = new ContextThemeWrapper(context,
                 R.style.DarkPopupMenu);
@@ -854,7 +855,7 @@ public abstract class VideoPlayerUi extends PlayerUi implements SeekBar.OnSeekBa
 
         binding.playbackSeekBar.setEnabled(false);
         binding.playbackSeekBar.getThumb()
-                .setColorFilter(new PorterDuffColorFilter(Color.RED, PorterDuff.Mode.SRC_IN));
+                .setColorFilter(new PorterDuffColorFilter(seekbarColor(), PorterDuff.Mode.SRC_IN));
 
         binding.loadingPanel.setBackgroundColor(Color.BLACK);
         animate(binding.loadingPanel, true, 0);
@@ -865,6 +866,15 @@ public abstract class VideoPlayerUi extends PlayerUi implements SeekBar.OnSeekBa
         binding.getRoot().setKeepScreenOn(false);
     }
 
+    /**
+     * Mining fork: seekbar colour from resources (YomiTube orange) instead of Color.RED.
+     *
+     * @return the seekbar colour
+     */
+    private int seekbarColor() {
+        return ContextCompat.getColor(context, R.color.yomitube_seekbar_color);
+    }
+
     @Override
     public void onPlaying() {
         super.onPlaying();
@@ -873,7 +883,7 @@ public abstract class VideoPlayerUi extends PlayerUi implements SeekBar.OnSeekBa
 
         binding.playbackSeekBar.setEnabled(true);
         binding.playbackSeekBar.getThumb()
-                .setColorFilter(new PorterDuffColorFilter(Color.RED, PorterDuff.Mode.SRC_IN));
+                .setColorFilter(new PorterDuffColorFilter(seekbarColor(), PorterDuff.Mode.SRC_IN));
 
         binding.loadingPanel.setVisibility(View.GONE);
 

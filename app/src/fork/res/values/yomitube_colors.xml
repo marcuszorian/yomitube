@@ -1,5 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- YomiTube: overrides NewPipe's launcher background (see app/build.gradle.kts, "fork" res dir). -->
+<!-- YomiTube: orange theme. Overrides NewPipe's colours (see app/build.gradle.kts, "fork" res).
+     NewPipe tints the whole app with the YouTube service colours, so overriding these two
+     recolours toolbars, status/navigation bars, splash and progress bars. -->
 <resources>
+    <!-- Launcher icon background; must match ORANGE in app/src/fork/make_icons.py -->
     <color name="ic_launcher_background">#F26B1D</color>
+
+    <!-- Light theme: deep enough for white toolbar text (4.0:1, like NewPipe's red at 4.2:1) -->
+    <color name="light_youtube_primary_color">#D9530E</color>
+    <!-- Dark/black themes: burnt orange -->
+    <color name="dark_youtube_primary_color">#A3420D</color>
+
+    <!-- Video player seekbar (was Color.RED in VideoPlayerUi) -->
+    <color name="yomitube_seekbar_color">#FF7A1F</color>
 </resources>
