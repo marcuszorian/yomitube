@@ -23,6 +23,7 @@ dependencyResolutionManagement {
     }
 }
 include(":app") // androidApp
+include(":mining") // sentence mining (fork)
 include(":desktopApp")
 include("shared")
 

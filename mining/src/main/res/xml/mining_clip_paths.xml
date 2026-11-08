@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <!-- Must match AudioClipper.CLIP_DIR -->
+    <cache-path name="clips" path="mining_clips/" />
+</paths>
