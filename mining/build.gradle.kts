@@ -66,6 +66,8 @@ dependencies {
     implementation(libs.newpipe.extractor)
     implementation(libs.androidx.core)
     implementation(libs.google.android.material)
+    implementation(libs.google.exoplayer.core)
+    implementation(libs.google.exoplayer.datasource)
 
     // Only used by mining
     implementation("com.atilika.kuromoji:kuromoji-ipadic:0.9.0")

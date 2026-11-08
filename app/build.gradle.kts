@@ -140,6 +140,8 @@ configure<ApplicationExtension> {
                 "META-INF/CHANGES",
                 "META-INF/COPYRIGHT" // "COPYRIGHT" belongs to RxJava...
             )
+            // Mining fork: duplicated in both Kuromoji jars
+            excludes += setOf("META-INF/CONTRIBUTORS.md", "META-INF/LICENSE.md")
         }
     }
 }
@@ -224,6 +226,7 @@ dependencies {
 
     // NewPipe libraries
     implementation(projects.shared)
+    implementation(projects.mining) // sentence mining (fork)
     implementation(libs.newpipe.nanojson)
     implementation(libs.newpipe.extractor)
     implementation(libs.newpipe.filepicker)

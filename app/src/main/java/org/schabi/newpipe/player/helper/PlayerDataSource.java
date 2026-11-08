@@ -192,6 +192,17 @@ public class PlayerDataSource {
 
 
     //region Static methods
+
+    /**
+     * Mining fork: an uncached YouTube HTTP data source factory for clipping sentence audio.
+     * Progressive audio streams use the {@code rn} parameter but not {@code range}, as above.
+     *
+     * @return a new {@link YoutubeHttpDataSource.Factory}
+     */
+    public static DataSource.Factory getMiningYoutubeHttpDataSourceFactory() {
+        return getYoutubeHttpDataSourceFactory(false, true);
+    }
+
     private static DefaultDashChunkSource.Factory getDefaultDashChunkSourceFactory(
             final DataSource.Factory dataSourceFactory) {
         return new DefaultDashChunkSource.Factory(dataSourceFactory);
