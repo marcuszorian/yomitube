@@ -22,6 +22,9 @@ val gitWorkingBranch = providers.exec {
     commandLine("git", "rev-parse", "--abbrev-ref", "HEAD")
 }.standardOutput.asText.map { it.trim() }
 val defaultBranches = listOf("master", "dev")
+
+// Mining fork: user-visible app name (not "NewPipe", to avoid confusion with the official app)
+val FORK_APP_NAME = "YomiTube"
 val workingBranch = gitWorkingBranch.getOrElse("")
 val normalizedWorkingBranch = workingBranch
     .replaceFirst("^[^A-Za-z]+".toRegex(), "")
@@ -41,7 +44,7 @@ configure<ApplicationExtension> {
 
     defaultConfig {
         applicationId = NEWPIPE_APPLICATION_ID_OLD
-        resValue("string", "app_name", "NewPipe")
+        resValue("string", "app_name", FORK_APP_NAME)
         minSdk {
             version = release(NEWPIPE_VERSION_SDK_MIN)
         }
@@ -64,10 +67,10 @@ configure<ApplicationExtension> {
             // suffix the app id and the app name with git branch name
             if (normalizedWorkingBranch.isEmpty() || workingBranch in defaultBranches) {
                 applicationIdSuffix = ".debug"
-                resValue("string", "app_name", "NewPipe Debug")
+                resValue("string", "app_name", "$FORK_APP_NAME Debug")
             } else {
                 applicationIdSuffix = ".debug.$normalizedWorkingBranch"
-                resValue("string", "app_name", "NewPipe $workingBranch")
+                resValue("string", "app_name", "$FORK_APP_NAME $workingBranch")
             }
         }
 
@@ -77,7 +80,7 @@ configure<ApplicationExtension> {
             applicationIdSuffix = suffix
             resValue(
                 "string", "app_name",
-                if (suffix == ".mining") "NewPipe Mining" else "NewPipe $suffix"
+                if (suffix == ".mining") FORK_APP_NAME else "$FORK_APP_NAME $suffix"
             )
             isMinifyEnabled = true
             isShrinkResources = true
@@ -95,10 +98,10 @@ configure<ApplicationExtension> {
             // suffix the app id and the app name with git branch name
             if (normalizedWorkingBranch.isEmpty() || workingBranch in defaultBranches) {
                 applicationIdSuffix = ".continuous"
-                resValue("string", "app_name", "NewPipe Continuous")
+                resValue("string", "app_name", "$FORK_APP_NAME Continuous")
             } else {
                 applicationIdSuffix = ".continuous.$normalizedWorkingBranch"
-                resValue("string", "app_name", "NewPipe $workingBranch")
+                resValue("string", "app_name", "$FORK_APP_NAME $workingBranch")
             }
         }
     }
