@@ -102,24 +102,24 @@
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/mining_start_left"
                         style="@style/Widget.Material3.Button.TextButton"
-                        android:layout_width="44dp"
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:contentDescription="@string/mining_extend_left"
                         android:minWidth="0dp"
-                        android:paddingStart="0dp"
-                        android:paddingEnd="0dp"
-                        android:text="◀" />
+                        android:paddingStart="8dp"
+                        android:paddingEnd="8dp"
+                        android:text="@string/mining_btn_add_left" />
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/mining_start_right"
                         style="@style/Widget.Material3.Button.TextButton"
-                        android:layout_width="44dp"
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:contentDescription="@string/mining_shrink_left"
                         android:minWidth="0dp"
-                        android:paddingStart="0dp"
-                        android:paddingEnd="0dp"
-                        android:text="▶" />
+                        android:paddingStart="8dp"
+                        android:paddingEnd="8dp"
+                        android:text="@string/mining_btn_trim_left" />
 
                     <TextView
                         android:id="@+id/mining_selection"
@@ -132,32 +132,34 @@
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/mining_end_left"
                         style="@style/Widget.Material3.Button.TextButton"
-                        android:layout_width="44dp"
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:contentDescription="@string/mining_shrink_right"
                         android:minWidth="0dp"
-                        android:paddingStart="0dp"
-                        android:paddingEnd="0dp"
-                        android:text="◀" />
+                        android:paddingStart="8dp"
+                        android:paddingEnd="8dp"
+                        android:text="@string/mining_btn_trim_right" />
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/mining_end_right"
                         style="@style/Widget.Material3.Button.TextButton"
-                        android:layout_width="44dp"
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:contentDescription="@string/mining_extend_right"
                         android:minWidth="0dp"
-                        android:paddingStart="0dp"
-                        android:paddingEnd="0dp"
-                        android:text="▶" />
+                        android:paddingStart="8dp"
+                        android:paddingEnd="8dp"
+                        android:text="@string/mining_btn_add_right" />
+                </LinearLayout>
+
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/mining_edit_sentence"
                         style="@style/Widget.Material3.Button.TextButton"
                         android:layout_width="wrap_content"
+                        android:layout_gravity="end"
                         android:layout_height="wrap_content"
                         android:text="@string/mining_edit_sentence" />
-                </LinearLayout>
 
                 <!-- Front -->
                 <LinearLayout

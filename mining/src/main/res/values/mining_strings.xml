@@ -26,6 +26,10 @@
     <string name="mining_shrink_left">Shrink selection from the left</string>
     <string name="mining_shrink_right">Shrink selection from the right</string>
     <string name="mining_extend_right">Extend selection right</string>
+    <string name="mining_btn_add_left">◀ Add</string>
+    <string name="mining_btn_trim_left">Trim ▶</string>
+    <string name="mining_btn_trim_right">◀ Trim</string>
+    <string name="mining_btn_add_right">Add ▶</string>
     <string name="mining_front">Front</string>
     <string name="mining_glossary">Glossary</string>
     <string name="mining_other_meanings">Other meanings (%1$d)</string>
