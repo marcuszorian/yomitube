@@ -72,10 +72,13 @@ configure<ApplicationExtension> {
         }
 
         release {
-            System.getProperty("packageSuffix")?.let { suffix ->
-                applicationIdSuffix = suffix
-                resValue("string", "app_name", "NewPipe $suffix")
-            }
+            // Mining fork: install beside official NewPipe by default
+            val suffix = System.getProperty("packageSuffix") ?: ".mining"
+            applicationIdSuffix = suffix
+            resValue(
+                "string", "app_name",
+                if (suffix == ".mining") "NewPipe Mining" else "NewPipe $suffix"
+            )
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(
