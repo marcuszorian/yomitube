@@ -73,11 +73,10 @@ public final class MiningController {
 
     private final Host host;
     private final Handler main = new Handler(Looper.getMainLooper());
-    private final ExecutorService worker = Executors.newSingleThreadExecutor(r -> {
-        Thread t = new Thread(r, "mining-worker");
-        t.setDaemon(true);
-        return t;
-    });
+    /** Tokenizer/dictionary warm-up, which can take ~10 s on the first run after an install. */
+    private final ExecutorService worker = daemonExecutor("mining-worker");
+    /** Caption fetches, kept off {@link #worker} so they never queue behind warm-up. */
+    private final ExecutorService captionWorker = daemonExecutor("mining-captions");
 
     /** Bumped whenever the stream changes, so late results for old streams are ignored. */
     private int streamGeneration;
@@ -109,6 +108,7 @@ public final class MiningController {
         if (url.equals(streamUrl)) {
             return; // e.g. quality change: same video, keep cues and panel
         }
+        Log.i(TAG, "Stream changed from " + streamUrl + " to " + url + " (panel open: " + isPanelOpen() + ")");
         closePanel(false);
         streamGeneration++;
         streamUrl = url;
@@ -127,7 +127,7 @@ public final class MiningController {
     private void loadCues(SubtitleTrackInfo t) {
         captionState = CaptionState.LOADING;
         final int gen = streamGeneration;
-        worker.execute(() -> {
+        captionWorker.execute(() -> {
             List<Cue> result = null;
             Exception error = null;
             try {
@@ -288,6 +288,15 @@ public final class MiningController {
         destroyed = true;
         closePanel(false);
         worker.shutdownNow();
+        captionWorker.shutdownNow();
+    }
+
+    private static ExecutorService daemonExecutor(String name) {
+        return Executors.newSingleThreadExecutor(r -> {
+            Thread t = new Thread(r, name);
+            t.setDaemon(true);
+            return t;
+        });
     }
 
     private static void toast(@Nullable Activity a, int res, Object... args) {
