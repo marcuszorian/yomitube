@@ -57,5 +57,15 @@ public class CaptionRepositoryTest {
         assertTrue(progressiveM4a > dubbedM4a);
         assertTrue(CaptionRepository.audioScore(true, true, true, 129) > progressiveM4a);
     }
-}
 
+    @Test
+    public void captionUrlsAreSwitchedToSrv3() {
+        assertEquals("https://www.youtube.com/api/timedtext?v=x&lang=ja&fmt=srv3&kind=asr",
+                CaptionRepository.withFormat(
+                        "https://www.youtube.com/api/timedtext?v=x&lang=ja&fmt=ttml&kind=asr", "srv3"));
+        assertEquals("https://www.youtube.com/api/timedtext?fmt=srv3",
+                CaptionRepository.withFormat("https://www.youtube.com/api/timedtext?fmt=vtt", "srv3"));
+        assertEquals("https://www.youtube.com/api/timedtext?v=x&fmt=srv3",
+                CaptionRepository.withFormat("https://www.youtube.com/api/timedtext?v=x", "srv3"));
+    }
+}

@@ -17,6 +17,7 @@ import org.schabi.newpipe.player.Player
 import org.schabi.newpipe.player.helper.AudioReactor
 import org.schabi.newpipe.player.helper.PlayerHelper
 import org.schabi.newpipe.player.ui.MainPlayerUi
+import org.schabi.newpipe.player.ui.MiningPlayerUi
 import org.schabi.newpipe.util.ThemeHelper.getAndroidDimenPx
 
 /**
@@ -66,6 +67,12 @@ class MainPlayerGestureListener(
             onSingleTap()
         }
         return true
+    }
+
+    // Mining fork: hold on a caption to mine it. Long press is otherwise unused here.
+    override fun onLongPress(e: MotionEvent) {
+        if (isMoving || isDoubleTapping) return
+        MiningPlayerUi.of(player)?.onLongPress(e.x, e.y)
     }
 
     private fun onScrollVolume(distanceY: Float) {

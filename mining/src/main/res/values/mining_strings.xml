@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Caption lookup -->
+    <string name="mining_captions_loading">Looking up Japanese captions…</string>
+    <string name="mining_captions_loaded">Japanese captions loaded</string>
+    <string name="mining_captions_loaded_auto">Auto-generated Japanese captions loaded</string>
+    <string name="mining_captions_none">No Japanese captions for this video</string>
+    <string name="mining_captions_unidentified">Couldn\'t identify this video — import a caption file</string>
+    <string name="mining_captions_error">Caption lookup failed: %1$s</string>
+    <string name="mining_captions_imported">Captions imported (%1$d lines)</string>
+    <string name="mining_captions_import_failed">Couldn\'t read that caption file</string>
+    <string name="mining_import_captions">Import captions</string>
+    <string name="mining_no_captions">No captions to mine from yet</string>
+    <string name="mining_captions_still_loading">Captions are still loading</string>
+
+    <!-- Panel -->
+    <string name="mining_button">Mine</string>
+    <string name="mining_prev_line">Previous line</string>
+    <string name="mining_next_line">Next line</string>
+    <string name="mining_close">Close</string>
+    <string name="mining_line_info">Line %1$d / %2$d</string>
+    <string name="mining_sentence">Sentence</string>
+    <string name="mining_edit_sentence">Edit sentence</string>
+    <string name="mining_save_sentence">Done</string>
+    <string name="mining_extend_left">Extend selection left</string>
+    <string name="mining_shrink_left">Shrink selection from the left</string>
+    <string name="mining_shrink_right">Shrink selection from the right</string>
+    <string name="mining_extend_right">Extend selection right</string>
+    <string name="mining_front">Front</string>
+    <string name="mining_glossary">Glossary</string>
+    <string name="mining_other_meanings">Other meanings (%1$d)</string>
+    <string name="mining_audio">Audio</string>
+    <string name="mining_play">Play</string>
+    <string name="mining_add">Add to Anki</string>
+    <string name="mining_word_audio">Word audio</string>
+    <string name="mining_word_speak">Speak the word</string>
+    <string name="mining_word_audio_unavailable">%1$s — word audio will use the sentence clip</string>
+    <string name="mining_install_voice">Install voice</string>
+    <string name="mining_saved_no_word_audio">Added to Anki: %1$s (word audio failed: %2$s)</string>
+    <string name="mining_picture">Picture</string>
+    <string name="mining_picture_retake">Retake</string>
+    <string name="mining_picture_failed">No picture: %1$s</string>
+    <string name="mining_settings">Settings</string>
+    <string name="mining_open">Mine this line</string>
+    <string name="mining_tap_word">Tap a word</string>
+    <string name="mining_looking_up">Looking up…</string>
+    <string name="mining_no_match">No dictionary match — type a glossary</string>
+    <string name="mining_dictionary_loading">Loading dictionary…</string>
+    <string name="mining_dictionary_failed">Dictionary failed to load: %1$s</string>
+
+    <!-- Saving -->
+    <string name="mining_saving_check">Checking Anki…</string>
+    <string name="mining_saving_clip">Clipping audio…</string>
+    <string name="mining_saving_anki">Adding card…</string>
+    <string name="mining_saved">Added to Anki: %1$s</string>
+    <string name="mining_duplicate">Already in Anki</string>
+    <string name="mining_clip_failed">Audio clip failed: %1$s</string>
+    <string name="mining_no_audio_source">No audio source for this video</string>
+    <string name="mining_front_empty">Front is empty — select a word first</string>
+
+    <!-- Settings -->
+    <string name="pref_mining_header">Sentence mining</string>
+    <string name="pref_anki_status">AnkiDroid status</string>
+    <string name="pref_anki_status_checking">Checking…</string>
+    <string name="pref_anki_permission">Grant AnkiDroid access</string>
+    <string name="pref_anki_permission_summary">Required to add cards to AnkiDroid</string>
+    <string name="pref_anki_install">Install AnkiDroid</string>
+    <string name="pref_anki_model">Note type</string>
+    <string name="pref_anki_deck">Deck</string>
+</resources>

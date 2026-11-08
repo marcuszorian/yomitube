@@ -115,6 +115,7 @@ import org.schabi.newpipe.player.resolver.VideoPlaybackResolver;
 import org.schabi.newpipe.player.resolver.VideoPlaybackResolver.SourceType;
 import org.schabi.newpipe.player.ui.BackgroundPlayerUi;
 import org.schabi.newpipe.player.ui.MainPlayerUi;
+import org.schabi.newpipe.player.ui.MiningPlayerUi;
 import org.schabi.newpipe.player.ui.PlayerUi;
 import org.schabi.newpipe.player.ui.PlayerUiList;
 import org.schabi.newpipe.player.ui.PopupPlayerUi;
@@ -590,13 +591,16 @@ public final class Player implements PlaybackListener, Listener {
                 UIs.destroyAll(PopupPlayerUi.class);
                 UIs.destroyAll(BackgroundPlayerUi.class);
                 UIs.addAndPrepare(new MainPlayerUi(this, binding));
+                UIs.addAndPrepare(new MiningPlayerUi(this)); // mining fork
                 break;
             case POPUP:
+                UIs.destroyAll(MiningPlayerUi.class); // mining fork
                 UIs.destroyAll(MainPlayerUi.class);
                 UIs.destroyAll(BackgroundPlayerUi.class);
                 UIs.addAndPrepare(new PopupPlayerUi(this, binding));
                 break;
             case AUDIO:
+                UIs.destroyAll(MiningPlayerUi.class); // mining fork
                 UIs.destroyAll(VideoPlayerUi.class); // destroys both MainPlayerUi and PopupPlayerUi
                 UIs.addAndPrepare(new BackgroundPlayerUi(this));
                 break;

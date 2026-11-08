@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Mining panel; applied with a ContextThemeWrapper because the host player uses its own (AppCompat) theme. -->
+    <style name="Theme.Mining" parent="Theme.Material3.Dark.NoActionBar">
+        <item name="colorPrimary">#FFB3C5FF</item>
+        <item name="colorOnPrimary">#FF002A78</item>
+        <item name="colorPrimaryContainer">#FF2A4387</item>
+        <item name="colorOnPrimaryContainer">#FFDBE1FF</item>
+        <item name="colorSecondaryContainer">#FF3F4759</item>
+        <item name="colorOnSecondaryContainer">#FFDBE2F9</item>
+    </style>
+</resources>

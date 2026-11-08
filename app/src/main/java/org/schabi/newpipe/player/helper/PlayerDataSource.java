@@ -20,6 +20,7 @@ import com.google.android.exoplayer2.upstream.DataSource;
 import com.google.android.exoplayer2.upstream.DefaultDataSource;
 import com.google.android.exoplayer2.upstream.DefaultHttpDataSource;
 import com.google.android.exoplayer2.upstream.TransferListener;
+import com.google.android.exoplayer2.upstream.cache.CacheDataSource;
 import com.google.android.exoplayer2.upstream.cache.LeastRecentlyUsedCacheEvictor;
 import com.google.android.exoplayer2.upstream.cache.SimpleCache;
 
@@ -201,6 +202,34 @@ public class PlayerDataSource {
      */
     public static DataSource.Factory getMiningYoutubeHttpDataSourceFactory() {
         return getYoutubeHttpDataSourceFactory(false, true);
+    }
+
+    /**
+     * Mining fork: reads clip audio from the player's cache (keyed by stream URL, like the
+     * player's own reads), fetching only uncached ranges from YouTube. Nothing is written back.
+     *
+     * @param context any context, used to create the cache if no player has yet
+     * @param upstream where to fetch uncached ranges from
+     * @return a cache-backed data source factory
+     */
+    public static DataSource.Factory getMiningCachedDataSourceFactory(
+            final Context context, final DataSource.Factory upstream) {
+        instantiateCacheIfNeeded(context);
+        return new CacheDataSource.Factory()
+                .setCache(cache)
+                .setUpstreamDataSourceFactory(upstream)
+                .setCacheWriteDataSinkFactory(null)
+                .setFlags(CacheDataSource.FLAG_IGNORE_CACHE_ON_ERROR);
+    }
+
+    /**
+     * Mining fork, for tests: the player's shared cache, or null before any player was created.
+     *
+     * @return the {@link SimpleCache} the player writes downloaded media to
+     */
+    @Nullable
+    public static SimpleCache getMiningCache() {
+        return cache;
     }
 
     private static DefaultDashChunkSource.Factory getDefaultDashChunkSourceFactory(

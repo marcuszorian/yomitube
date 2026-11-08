@@ -104,6 +104,7 @@ import org.schabi.newpipe.player.playqueue.PlayQueue;
 import org.schabi.newpipe.player.playqueue.PlayQueueItem;
 import org.schabi.newpipe.player.playqueue.SinglePlayQueue;
 import org.schabi.newpipe.player.ui.MainPlayerUi;
+import org.schabi.newpipe.player.ui.MiningPlayerUi;
 import org.schabi.newpipe.player.ui.VideoPlayerUi;
 import org.schabi.newpipe.util.Constants;
 import org.schabi.newpipe.util.DeviceUtils;
@@ -705,6 +706,12 @@ public final class VideoDetailFragment
     public boolean onBackPressed() {
         if (DEBUG) {
             Log.d(TAG, "onBackPressed() called");
+        }
+
+        // Mining fork: back first closes the mining panel
+        final MiningPlayerUi mining = MiningPlayerUi.of(player);
+        if (mining != null && mining.handleBack()) {
+            return true;
         }
 
         // If we are in fullscreen mode just exit from it via first back press

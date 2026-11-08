@@ -1,0 +1,339 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Mining panel: shown over the paused, dimmed video. Inflated with Theme.Mining (Material3 dark). -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/mining_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#A6000000"
+    android:clickable="true"
+    android:focusable="false">
+
+    <LinearLayout
+        android:id="@+id/mining_card"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_gravity="center"
+        android:layout_margin="12dp"
+        android:background="@drawable/mining_panel_background"
+        android:clickable="true"
+        android:focusable="false"
+        android:orientation="vertical">
+
+        <!-- Line navigation -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingStart="4dp"
+            android:paddingEnd="4dp">
+
+            <ImageButton
+                android:id="@+id/mining_prev"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="@string/mining_prev_line"
+                android:src="@drawable/ic_mining_chevron_left_24dp" />
+
+            <TextView
+                android:id="@+id/mining_line_info"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:textAppearance="?attr/textAppearanceLabelLarge" />
+
+            <ImageButton
+                android:id="@+id/mining_next"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="@string/mining_next_line"
+                android:src="@drawable/ic_mining_chevron_right_24dp" />
+
+            <ImageButton
+                android:id="@+id/mining_close"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="@string/mining_close"
+                android:src="@drawable/ic_mining_close_24dp" />
+        </LinearLayout>
+
+        <ScrollView
+            android:id="@+id/mining_scroll"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:fillViewport="true">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:paddingBottom="8dp">
+
+                <!-- Sentence: word chips, or an edit box -->
+                <org.schabi.newpipe.mining.FlowLayout
+                    android:id="@+id/mining_chips"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+
+                <EditText
+                    android:id="@+id/mining_sentence_edit"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="@string/mining_sentence"
+                    android:importantForAutofill="no"
+                    android:inputType="textMultiLine|textNoSuggestions"
+                    android:textSize="20sp"
+                    android:visibility="gone" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/mining_start_left"
+                        style="@style/Widget.Material3.Button.TextButton"
+                        android:layout_width="44dp"
+                        android:layout_height="wrap_content"
+                        android:contentDescription="@string/mining_extend_left"
+                        android:minWidth="0dp"
+                        android:paddingStart="0dp"
+                        android:paddingEnd="0dp"
+                        android:text="◀" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/mining_start_right"
+                        style="@style/Widget.Material3.Button.TextButton"
+                        android:layout_width="44dp"
+                        android:layout_height="wrap_content"
+                        android:contentDescription="@string/mining_shrink_left"
+                        android:minWidth="0dp"
+                        android:paddingStart="0dp"
+                        android:paddingEnd="0dp"
+                        android:text="▶" />
+
+                    <TextView
+                        android:id="@+id/mining_selection"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:textSize="18sp" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/mining_end_left"
+                        style="@style/Widget.Material3.Button.TextButton"
+                        android:layout_width="44dp"
+                        android:layout_height="wrap_content"
+                        android:contentDescription="@string/mining_shrink_right"
+                        android:minWidth="0dp"
+                        android:paddingStart="0dp"
+                        android:paddingEnd="0dp"
+                        android:text="◀" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/mining_end_right"
+                        style="@style/Widget.Material3.Button.TextButton"
+                        android:layout_width="44dp"
+                        android:layout_height="wrap_content"
+                        android:contentDescription="@string/mining_extend_right"
+                        android:minWidth="0dp"
+                        android:paddingStart="0dp"
+                        android:paddingEnd="0dp"
+                        android:text="▶" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/mining_edit_sentence"
+                        style="@style/Widget.Material3.Button.TextButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/mining_edit_sentence" />
+                </LinearLayout>
+
+                <!-- Front -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/mining_front"
+                        android:textAppearance="?attr/textAppearanceLabelMedium" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/mining_other_meanings"
+                        style="@style/Widget.Material3.Button.TextButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/mining_other_meanings"
+                        android:visibility="gone" />
+
+                    <com.google.android.material.checkbox.MaterialCheckBox
+                        android:id="@+id/mining_word_audio_include"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:checked="true"
+                        android:text="@string/mining_word_audio" />
+
+                    <ImageButton
+                        android:id="@+id/mining_word_speak"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:contentDescription="@string/mining_word_speak"
+                        android:src="@drawable/ic_mining_play_arrow_24dp" />
+                </LinearLayout>
+
+                <EditText
+                    android:id="@+id/mining_front"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:importantForAutofill="no"
+                    android:inputType="text|textNoSuggestions"
+                    android:textSize="18sp" />
+
+                <!-- Glossary -->
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="@string/mining_glossary"
+                    android:textAppearance="?attr/textAppearanceLabelMedium" />
+
+                <EditText
+                    android:id="@+id/mining_glossary"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="top|start"
+                    android:importantForAutofill="no"
+                    android:inputType="textMultiLine|textNoSuggestions"
+                    android:minLines="2"
+                    android:textSize="15sp" />
+
+                <!-- Audio trim -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/mining_audio"
+                        android:textAppearance="?attr/textAppearanceLabelMedium" />
+
+                    <TextView
+                        android:id="@+id/mining_trim_times"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="12dp"
+                        android:layout_weight="1"
+                        android:fontFeatureSettings="tnum" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/mining_play"
+                        style="@style/Widget.Material3.Button.TonalButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/mining_play"
+                        app:icon="@drawable/ic_mining_play_arrow_24dp" />
+                </LinearLayout>
+
+                <com.google.android.material.slider.RangeSlider
+                    android:id="@+id/mining_trim"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+
+                <!-- Screenshot for the Picture field -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <com.google.android.material.checkbox.MaterialCheckBox
+                        android:id="@+id/mining_picture_include"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:checked="true"
+                        android:text="@string/mining_picture" />
+
+                    <ImageView
+                        android:id="@+id/mining_picture"
+                        android:layout_width="0dp"
+                        android:layout_height="72dp"
+                        android:layout_marginStart="8dp"
+                        android:layout_weight="1"
+                        android:adjustViewBounds="true"
+                        android:contentDescription="@string/mining_picture"
+                        android:scaleType="fitStart" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/mining_picture_retake"
+                        style="@style/Widget.Material3.Button.TextButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/mining_picture_retake" />
+                </LinearLayout>
+            </LinearLayout>
+        </ScrollView>
+
+        <!-- Status + save -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingStart="16dp"
+            android:paddingTop="4dp"
+            android:paddingEnd="12dp"
+            android:paddingBottom="8dp">
+
+            <TextView
+                android:id="@+id/mining_status"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:maxLines="3"
+                android:textAppearance="?attr/textAppearanceBodySmall" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/mining_settings"
+                style="@style/Widget.Material3.Button.TextButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/mining_settings"
+                android:visibility="gone" />
+
+            <ProgressBar
+                android:id="@+id/mining_progress"
+                style="?android:attr/progressBarStyleSmall"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="8dp"
+                android:visibility="gone" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/mining_add"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/mining_add" />
+        </LinearLayout>
+    </LinearLayout>
+</FrameLayout>

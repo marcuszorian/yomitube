@@ -212,6 +212,11 @@ public final class MainPlayerUi extends VideoPlayerUi implements View.OnLayoutCh
             hideSystemUIIfNeeded();
             return true;
         });
+
+        // Mining fork
+        binding.miningButton.setVisibility(View.VISIBLE);
+        binding.miningButton.setOnClickListener(v ->
+                player.UIs().get(MiningPlayerUi.class).ifPresent(MiningPlayerUi::openPanel));
     }
 
     @Override
@@ -221,6 +226,8 @@ public final class MainPlayerUi extends VideoPlayerUi implements View.OnLayoutCh
         binding.queueButton.setOnClickListener(null);
         binding.segmentsButton.setOnClickListener(null);
         binding.addToPlaylistButton.setOnClickListener(null);
+        binding.miningButton.setOnClickListener(null); // mining fork
+        binding.miningButton.setVisibility(View.GONE);
 
         context.getContentResolver().unregisterContentObserver(settingsContentObserver);
 
