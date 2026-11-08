@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- YomiTube: overrides NewPipe's launcher background (see app/build.gradle.kts, "fork" res dir). -->
 <resources>
-    <color name="ic_launcher_background">#F4F6FB</color>
+    <color name="ic_launcher_background">#F26B1D</color>
 </resources>
