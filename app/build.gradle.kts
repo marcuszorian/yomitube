@@ -60,6 +60,18 @@ configure<ApplicationExtension> {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    // Mining fork: release signing, only when CI provides the key (see yomitube-release.yml).
+    // Local builds stay unsigned; the keystore never lives in the repo.
+    val releaseKeystore = System.getenv("YOMITUBE_KEYSTORE_FILE")?.takeIf { it.isNotBlank() }
+    if (releaseKeystore != null) {
+        signingConfigs.create("yomitubeRelease") {
+            storeFile = file(releaseKeystore)
+            storePassword = System.getenv("YOMITUBE_KEYSTORE_PASSWORD")
+            keyAlias = System.getenv("YOMITUBE_KEY_ALIAS")
+            keyPassword = System.getenv("YOMITUBE_KEY_PASSWORD")
+        }
+    }
+
     buildTypes {
         debug {
             isDebuggable = true
@@ -88,6 +100,9 @@ configure<ApplicationExtension> {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            if (releaseKeystore != null) {
+                signingConfig = signingConfigs.getByName("yomitubeRelease")
+            }
         }
 
         register("continuous") {

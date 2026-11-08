@@ -1,0 +1,152 @@
+# Mining fork (YomiTube): signed release on pushing a tag like v0.29.2-yt.1.
+# The tag must start with the NewPipe version the code is based on; the number after "yt." is the
+# YomiTube build on that version. versionCode = NewPipe's versionCode * 100 + that number, so it
+# always increases (also across NewPipe updates). Nothing else publishes a release.
+name: YomiTube release
+
+on:
+  push:
+    tags: ['v*-yt.*']
+
+permissions:
+  contents: write # create the release
+  issues: write # the dictionary step opens an issue if the latest JMdict release is broken
+
+concurrency:
+  group: yomitube-release-${{ github.ref }}
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0 # to find the NewPipe tag this is based on
+
+      - name: Check out a named branch
+        run: git checkout -B mining
+
+      - name: Work out the version from the tag
+        id: version
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          if ! [[ "$TAG" =~ ^v([0-9]+\.[0-9]+\.[0-9]+)-yt\.([1-9][0-9]?)$ ]]; then
+            echo "::error::Tag $TAG must look like v0.29.2-yt.1 (build number 1-99)"; exit 1
+          fi
+          np_version=${BASH_REMATCH[1]}; build=${BASH_REMATCH[2]}
+          code_file=buildSrc/src/main/kotlin/ProjectConfig.kt
+          np_code=$(sed -nE 's/.*NEWPIPE_VERSION_CODE = ([0-9]+).*/\1/p' "$code_file")
+          np_name=$(sed -nE 's/.*NEWPIPE_VERSION_NAME = "([^"]+)".*/\1/p' "$code_file")
+          if [ "$np_name" != "$np_version" ]; then
+            echo "::error::Tag says NewPipe $np_version but the code is NewPipe $np_name"; exit 1
+          fi
+          base=$(git describe --tags --abbrev=0 --match 'v[0-9]*.[0-9]*.[0-9]*' --exclude '*-yt.*' HEAD)
+          {
+            echo "np-version=$np_version"
+            echo "np-base-tag=$base"
+            echo "version-code=$((np_code * 100 + build))"
+            echo "version-name=$np_version-yt.$build"
+            echo "build=$build"
+          } >> "$GITHUB_OUTPUT"
+
+      - uses: actions/setup-java@v5
+        with:
+          java-version: 21
+          distribution: temurin
+          cache: gradle
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Dictionary
+        id: jmdict
+        uses: ./.github/actions/jmdict
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Note a fallback dictionary
+        if: steps.jmdict.outputs.fell-back == 'true'
+        run: |
+          echo "::warning::The latest JMdict release failed its check; this release ships the last good one (${{ steps.jmdict.outputs.release-tag }})."
+
+      - name: Unpack the signing key
+        env:
+          KEYSTORE_BASE64: ${{ secrets.YOMITUBE_KEYSTORE_BASE64 }}
+        run: |
+          if [ -z "$KEYSTORE_BASE64" ]; then echo "::error::YOMITUBE_KEYSTORE_BASE64 secret is missing"; exit 1; fi
+          base64 -d <<<"$KEYSTORE_BASE64" > "$RUNNER_TEMP/release.jks"
+          echo "YOMITUBE_KEYSTORE_FILE=$RUNNER_TEMP/release.jks" >> "$GITHUB_ENV"
+
+      - name: Unit tests, checkstyle, ktlint, signed APK
+        env:
+          YOMITUBE_KEYSTORE_PASSWORD: ${{ secrets.YOMITUBE_KEYSTORE_PASSWORD }}
+          YOMITUBE_KEY_ALIAS: ${{ secrets.YOMITUBE_KEY_ALIAS }}
+          YOMITUBE_KEY_PASSWORD: ${{ secrets.YOMITUBE_KEY_PASSWORD }}
+        run: >
+          ./gradlew testDebugUnitTest runCheckstyle runKtlint assembleRelease
+          --stacktrace -DskipFormatKtlint
+          -DversionCodeOverride=${{ steps.version.outputs.version-code }}
+          -DversionNameSuffix=-yt.${{ steps.version.outputs.build }}
+
+      - name: Verify the signature and name the APK
+        id: apk
+        env:
+          VERSION_NAME: ${{ steps.version.outputs.version-name }}
+        run: |
+          rm -f "$RUNNER_TEMP/release.jks"
+          apks=(app/build/outputs/apk/release/*.apk)
+          if [ ${#apks[@]} -ne 1 ]; then echo "::error::Expected one APK, got: ${apks[*]}"; exit 1; fi
+          apksigner=$(ls -d "$ANDROID_HOME"/build-tools/*/ | sort -V | tail -1)apksigner
+          "$apksigner" verify --print-certs "${apks[0]}" | tee /tmp/cert.txt
+          grep -q "CN=YomiTube" /tmp/cert.txt || { echo "::error::APK is not signed with the YomiTube key"; exit 1; }
+          out="YomiTube_v$VERSION_NAME.apk"
+          mv "${apks[0]}" "$out"
+          echo "file=$out" >> "$GITHUB_OUTPUT"
+          echo "sha256=$(sha256sum "$out" | cut -d' ' -f1)" >> "$GITHUB_OUTPUT"
+          echo "cert-sha256=$(sed -nE 's/.*certificate SHA-256 digest: (.*)/\1/p' /tmp/cert.txt | head -1)" >> "$GITHUB_OUTPUT"
+
+      - name: Write release notes
+        env:
+          VERSION_NAME: ${{ steps.version.outputs.version-name }}
+          VERSION_CODE: ${{ steps.version.outputs.version-code }}
+          NP_BASE: ${{ steps.version.outputs.np-base-tag }}
+          COMMIT: ${{ github.sha }}
+          FILE: ${{ steps.apk.outputs.file }}
+          SHA256: ${{ steps.apk.outputs.sha256 }}
+          CERT: ${{ steps.apk.outputs.cert-sha256 }}
+          DICT_TAG: ${{ steps.jmdict.outputs.release-tag }}
+          DICT_DATE: ${{ steps.jmdict.outputs.dict-date }}
+          REPO: ${{ github.repository }}
+        run: |
+          cat > notes.md <<EOF
+          **YomiTube $VERSION_NAME**: unofficial sentence-mining build of NewPipe.
+
+          | | |
+          |---|---|
+          | Based on | NewPipe [\`$NP_BASE\`](https://github.com/TeamNewPipe/NewPipe/releases/tag/$NP_BASE) |
+          | Commit | [\`${COMMIT:0:9}\`](https://github.com/$REPO/commit/$COMMIT) |
+          | Version code | $VERSION_CODE |
+          | App ID | \`org.schabi.newpipe.mining\` |
+          | Dictionary | JMdict via jmdict-simplified \`$DICT_TAG\` (dated $DICT_DATE) |
+          | APK SHA-256 | \`$SHA256\` |
+          | Signing certificate SHA-256 | \`$CERT\` |
+
+          > [!IMPORTANT]
+          > This is an **unofficial** build. It is **not built by TeamNewPipe**, and it is **not compatible with official NewPipe releases**: it installs as a separate app and can't update or be updated by NewPipe. Please don't report its problems to the NewPipe project.
+
+          ### Dictionary credit
+          This app uses the [JMdict](https://www.edrdg.org/wiki/index.php/JMdict-EDICT_Dictionary_Project) dictionary files. These files are the property of the [Electronic Dictionary Research and Development Group](https://www.edrdg.org/), and are used in conformance with the Group's [licence](https://www.edrdg.org/edrdg/licence.html). The converted dictionary is licensed under [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/). Converted from JSON by [jmdict-simplified](https://github.com/scriptin/jmdict-simplified).
+
+          YomiTube is free software under the GNU GPLv3, based on [NewPipe](https://github.com/TeamNewPipe/NewPipe).
+          EOF
+
+      - name: Publish the release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ github.ref_name }}
+          FILE: ${{ steps.apk.outputs.file }}
+        run: |
+          gh release create "$TAG" "$FILE" --title "YomiTube ${TAG#v}" --notes-file notes.md --verify-tag

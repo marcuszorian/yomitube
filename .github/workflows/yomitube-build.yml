@@ -1,0 +1,87 @@
+# Mining fork (YomiTube): test build for every push / PR to `mining`.
+# Runs the JVM unit tests, checkstyle and ktlint, builds the `continuous` APK (signed with a debug
+# key, app ID ...continuous.mining) with the latest JMdict, and uploads it as an artifact.
+# No emulator tests: the mining device tests need YouTube and would be flaky on CI runners.
+# Also called by yomitube-sync-upstream.yml to check a merge before it reaches `mining`.
+name: YomiTube build
+
+on:
+  push:
+    branches: [mining]
+    paths-ignore: ['README.md', 'doc/**', 'fastlane/**', 'assets/**', '**/*.md']
+  pull_request:
+    branches: [mining]
+  workflow_dispatch:
+    inputs:
+      jmdict-tag:
+        description: jmdict-simplified release to use instead of the latest (e.g. to test the fallback)
+        required: false
+        default: ""
+  workflow_call:
+    inputs:
+      ref:
+        description: Git ref to build
+        type: string
+        required: true
+
+permissions:
+  contents: read
+  issues: write # the dictionary step opens an issue if the latest JMdict release is broken
+
+concurrency:
+  group: yomitube-build-${{ inputs.ref || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.ref || '' }}
+      - uses: gradle/actions/wrapper-validation@v6
+
+      # The app ID and name get the branch as a suffix; name the branch `mining` for PRs too.
+      - name: Check out a named branch
+        run: git checkout -B mining
+
+      - uses: actions/setup-java@v5
+        with:
+          java-version: 21
+          distribution: temurin
+          cache: gradle
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Dictionary
+        id: jmdict
+        uses: ./.github/actions/jmdict
+        with:
+          tag: ${{ inputs.jmdict-tag || '' }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Unit tests, checkstyle, ktlint, APK
+        run: >
+          ./gradlew testDebugUnitTest runCheckstyle runKtlint assembleContinuous
+          --stacktrace -DskipFormatKtlint
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v7
+        with:
+          name: YomiTube-continuous-${{ github.run_number }}
+          path: app/build/outputs/apk/continuous/*.apk
+          retention-days: 30
+
+      - name: Upload test reports
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: test-reports-${{ github.run_number }}
+          path: |
+            */build/reports/tests/**
+            app/build/reports/checkstyle/**
+            app/build/reports/ktlint/**
+          retention-days: 14

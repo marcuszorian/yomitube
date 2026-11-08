@@ -63,7 +63,12 @@
     <string name="pref_anki_model">Note type</string>
     <string name="pref_anki_deck">Deck</string>
     <string name="pref_mining_summary">Add cards to AnkiDroid from video captions</string>
-    <string name="pref_mining_attribution">Dictionary and tokenizer</string>
-    <string name="pref_mining_attribution_summary">Dictionary: JMdict, © Electronic Dictionary Research and Development Group, CC BY-SA 4.0. Word splitting: Kuromoji (Apache 2.0) with IPADIC. Tap for the full notices.</string>
-    <string name="pref_mining_notices_jmdict">This app uses the JMdict dictionary files. These files are the property of the Electronic Dictionary Research and Development Group (EDRDG), and are used in conformance with the Group\'s licence (https://www.edrdg.org/edrdg/licence.html), Creative Commons Attribution-ShareAlike 4.0. Converted with jmdict-simplified (https://github.com/scriptin/jmdict-simplified).</string>
+    <string name="pref_mining_attribution">Sources and licences</string>
+    <string name="pref_mining_attribution_summary">Dictionary: JMdict, © Electronic Dictionary Research and Development Group, CC BY-SA 4.0. Word splitting: Kuromoji (Apache 2.0) with IPADIC.</string>
+    <string name="mining_sources_dictionary_heading">Dictionary: JMdict</string>
+    <string name="pref_mining_notices_jmdict">This app uses the JMdict dictionary files. These files are the property of the Electronic Dictionary Research and Development Group (EDRDG), and are used in conformance with the Group\'s licence.\n\nLicence: https://www.edrdg.org/edrdg/licence.html\nThe dictionary data is licensed under Creative Commons Attribution-ShareAlike 4.0: https://creativecommons.org/licenses/by-sa/4.0/\nJMdict project and documentation: https://www.edrdg.org/wiki/index.php/JMdict-EDICT_Dictionary_Project\nConverted with jmdict-simplified: https://github.com/scriptin/jmdict-simplified\n\nThe dictionary is updated from the latest JMdict release with each YomiTube release.</string>
+    <string name="mining_sources_dictionary_version">Installed dictionary: %1$s, dated %2$s</string>
+    <string name="mining_sources_dictionary_version_loading">Installed dictionary: loading…</string>
+    <string name="mining_sources_dictionary_version_unknown">Installed dictionary: unknown version</string>
+    <string name="mining_sources_tokenizer_heading">Word splitting: Kuromoji with IPADIC</string>
 </resources>

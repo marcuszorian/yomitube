@@ -129,6 +129,16 @@ public final class Dictionary implements DictionarySource {
         }
     }
 
+    /**
+     * A value from the database's {@code meta} table ({@code release_tag}, {@code dict_date},
+     * {@code jmdict_version}), or "" if absent. Blocks while the database opens.
+     */
+    public String meta(String key) {
+        try (Cursor c = open().rawQuery("SELECT value FROM meta WHERE key = ?", new String[]{key})) {
+            return c.moveToFirst() && c.getString(0) != null ? c.getString(0) : "";
+        }
+    }
+
     @Override
     public List<DictEntry> lookup(String term) {
         if (term == null) return Collections.emptyList();

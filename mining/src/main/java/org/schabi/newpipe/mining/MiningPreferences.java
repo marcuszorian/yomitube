@@ -6,28 +6,17 @@ import android.net.Uri;
 import android.os.Handler;
 import android.os.Looper;
 import android.provider.Settings;
-import android.text.method.LinkMovementMethod;
-import android.text.util.Linkify;
-import android.util.Log;
-import android.util.TypedValue;
-import android.widget.ScrollView;
-import android.widget.TextView;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.AlertDialog;
 import androidx.preference.ListPreference;
 import androidx.preference.Preference;
 import androidx.preference.PreferenceFragmentCompat;
 
 
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -42,7 +31,9 @@ public final class MiningPreferences {
     public static final String KEY_PERMISSION = "ankiPermission";
     public static final String KEY_STATUS = "ankiStatus";
     public static final String KEY_ATTRIBUTION = "miningAttribution";
-    private static final String NOTICE_ASSET = "mining_kuromoji_notice.txt";
+    /** :app's themed subclass of {@link MiningSettingsActivity} (declared in its manifest). */
+    private static final String APP_SETTINGS_ACTIVITY =
+            "org.schabi.newpipe.settings.MiningSettingsActivity";
 
     private static final ExecutorService EXECUTOR = Executors.newSingleThreadExecutor();
 
@@ -209,38 +200,12 @@ public final class MiningPreferences {
         }
     }
 
+    /** Opens "Sources and licences" as its own screen, as the JMdict licence asks. */
     private void showNotices() {
         Context context = fragment.requireContext();
-        String text = context.getString(R.string.pref_mining_notices_jmdict) + "\n\n" + readAsset(context);
-        TextView view = new TextView(context);
-        int pad = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 20,
-                context.getResources().getDisplayMetrics());
-        view.setPadding(pad, pad, pad, pad);
-        view.setTextIsSelectable(true);
-        view.setText(text);
-        Linkify.addLinks(view, Linkify.WEB_URLS);
-        view.setMovementMethod(LinkMovementMethod.getInstance());
-        ScrollView scroll = new ScrollView(context);
-        scroll.addView(view);
-        new AlertDialog.Builder(context)
-                .setTitle(R.string.pref_mining_attribution)
-                .setView(scroll)
-                .setPositiveButton(android.R.string.ok, null)
-                .show();
-    }
-
-    private static String readAsset(Context context) {
-        try (InputStream in = context.getAssets().open(NOTICE_ASSET)) {
-            ByteArrayOutputStream out = new ByteArrayOutputStream();
-            byte[] buf = new byte[8192];
-            int n;
-            while ((n = in.read(buf)) > 0) {
-                out.write(buf, 0, n);
-            }
-            return out.toString(StandardCharsets.UTF_8.name());
-        } catch (IOException e) {
-            Log.w("MiningSettings", "Cannot read " + NOTICE_ASSET, e);
-            return "";
-        }
+        // The :app subclass of MiningSettingsActivity carries NewPipe's settings theme.
+        Intent intent = new Intent().setClassName(context, APP_SETTINGS_ACTIVITY);
+        intent.putExtra(MiningSettingsActivity.EXTRA_SOURCES, true);
+        fragment.startActivity(intent);
     }
 }

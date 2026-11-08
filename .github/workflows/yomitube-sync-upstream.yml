@@ -1,0 +1,254 @@
+# Mining fork (YomiTube): daily check for new NewPipe releases and new JMdict releases.
+#
+# NewPipe: merges the newest upstream release tag that `mining` doesn't contain yet into
+# `sync/<tag>`, reruns make_strings.py, then runs the full build (yomitube-build.yml). Only if that
+# passes is `mining` fast-forwarded. On a conflict or a failing build, `mining` is left alone and an
+# issue is opened. Releasing stays a deliberate step: push a tag.
+#
+# Dictionary: builds and checks a new jmdict-simplified release (which also warms the cache), and
+# opens a reminder issue if a newer dictionary has waited more than 30 days for a YomiTube release.
+#
+# Pushing uses a write deploy key for this repo only (secret YOMITUBE_SYNC_DEPLOY_KEY): GITHUB_TOKEN
+# may not push commits that touch .github/workflows/ (upstream releases usually do), and its pushes
+# wouldn't trigger the build workflow.
+name: YomiTube sync upstream
+
+on:
+  schedule:
+    - cron: '17 3 * * *' # daily, 03:17 UTC
+  workflow_dispatch:
+    inputs:
+      base:
+        description: Branch to merge into (use a scratch branch to test a merge)
+        default: mining
+      upstream-tag:
+        description: Merge this NewPipe tag instead of the newest one
+        default: ""
+      jmdict-tag:
+        description: Check this jmdict-simplified release instead of the latest (testing the fallback)
+        default: ""
+
+permissions:
+  contents: read
+
+concurrency:
+  group: yomitube-sync
+  cancel-in-progress: false
+
+jobs:
+  # ------------------------------------------------------------------ NewPipe
+  merge:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+    outputs:
+      tag: ${{ steps.find.outputs.tag }}
+      branch: ${{ steps.find.outputs.branch }}
+      merged: ${{ steps.merge.outputs.merged }}
+    env:
+      BASE: ${{ inputs.base || 'mining' }}
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    steps:
+      - name: Check the deploy key
+        id: key
+        env:
+          DEPLOY_KEY: ${{ secrets.YOMITUBE_SYNC_DEPLOY_KEY }}
+        run: |
+          if [ -z "$DEPLOY_KEY" ]; then
+            echo "::warning::Skipping the NewPipe merge: secret YOMITUBE_SYNC_DEPLOY_KEY (private half of a write deploy key for this repo) is not set."
+            echo "Skipped the NewPipe merge: no deploy key (secret \`YOMITUBE_SYNC_DEPLOY_KEY\`)." >> "$GITHUB_STEP_SUMMARY"
+            echo "ok=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "ok=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/checkout@v6
+        if: steps.key.outputs.ok == 'true'
+        with:
+          ref: ${{ env.BASE }}
+          fetch-depth: 0
+          ssh-key: ${{ secrets.YOMITUBE_SYNC_DEPLOY_KEY }}
+
+      - name: Find the newest NewPipe release not in ${{ env.BASE }}
+        id: find
+        if: steps.key.outputs.ok == 'true'
+        env:
+          WANT_TAG: ${{ inputs.upstream-tag }}
+        run: |
+          git remote add upstream https://github.com/TeamNewPipe/NewPipe.git
+          git fetch --quiet --no-tags upstream '+refs/tags/v*:refs/tags/v*'
+          if [ -n "$WANT_TAG" ]; then
+            tag="$WANT_TAG"
+          else
+            # Release tags only (vX.Y.Z); newest first.
+            tag=$(git tag -l 'v*' --sort=-v:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | head -1)
+          fi
+          if git merge-base --is-ancestor "$tag" HEAD; then
+            echo "$BASE already contains NewPipe $tag. Nothing to merge." | tee -a "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "branch=sync/$tag" >> "$GITHUB_OUTPUT"
+
+      - name: Merge ${{ steps.find.outputs.tag }}
+        id: merge
+        if: steps.find.outputs.tag != ''
+        env:
+          TAG: ${{ steps.find.outputs.tag }}
+          BRANCH: ${{ steps.find.outputs.branch }}
+        run: |
+          git config user.name "yomitube-sync[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -B "$BRANCH"
+          if git merge --no-edit -m "Merge NewPipe $TAG" "$TAG"; then
+            python3 -I app/src/fork/make_strings.py app/src
+            git add app/src/fork/res
+            if ! git diff --cached --quiet; then
+              git commit -m "Regenerate YomiTube strings after merging NewPipe $TAG"
+            fi
+            git push --force origin "$BRANCH"
+            echo "merged=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # Conflict: keep the conflict state on the branch for whoever resolves it.
+          conflicts=$(git diff --name-only --diff-filter=U)
+          git add -A
+          git commit -m "WIP: merge NewPipe $TAG (UNRESOLVED CONFLICTS)
+
+          Conflicted files:
+          $conflicts" --no-verify
+          git push --force origin "$BRANCH"
+          echo "merged=false" >> "$GITHUB_OUTPUT"
+          {
+            echo "Merging NewPipe \`$TAG\` into \`$BASE\` hit conflicts, so \`$BASE\` was left alone."
+            echo
+            echo "Conflicted files (all YomiTube changes in upstream files are marked \"Mining fork\"):"
+            sed 's/^/- `/; s/$/`/' <<<"$conflicts"
+            echo
+            echo "The branch \`$BRANCH\` holds the merge **with conflict markers committed**. To resolve:"
+            echo
+            echo '```sh'
+            echo "git fetch origin upstream --tags"
+            echo "git checkout $BASE && git merge $TAG   # resolve, then"
+            echo "python3 -I app/src/fork/make_strings.py app/src"
+            echo "./gradlew testDebugUnitTest assembleDebug   # and try mining on the phone"
+            echo '```'
+            echo
+            echo "Log: $RUN_URL"
+          } > /tmp/issue.md
+          echo "::error::Merge conflicts: $conflicts"
+          echo "conflict=true" >> "$GITHUB_OUTPUT"
+
+      - name: Open an issue about the conflict
+        if: steps.merge.outputs.merged == 'false'
+        env:
+          TAG: ${{ steps.find.outputs.tag }}
+        run: |
+          title="NewPipe $TAG: merge conflicts into $BASE"
+          if [ -z "$(gh issue list --state open --search "\"$title\" in:title" --json title --jq ".[] | select(.title == \"$title\") | .title")" ]; then
+            gh issue create --title "$title" --body-file /tmp/issue.md
+          fi
+          exit 1
+
+  check-merge:
+    needs: merge
+    if: needs.merge.outputs.merged == 'true'
+    uses: ./.github/workflows/yomitube-build.yml
+    with:
+      ref: ${{ needs.merge.outputs.branch }}
+    permissions:
+      contents: read
+      issues: write
+    secrets: inherit
+
+  fast-forward:
+    needs: [merge, check-merge]
+    if: always() && needs.merge.outputs.merged == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+    env:
+      BASE: ${{ inputs.base || 'mining' }}
+      TAG: ${{ needs.merge.outputs.tag }}
+      BRANCH: ${{ needs.merge.outputs.branch }}
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ env.BRANCH }}
+          fetch-depth: 0
+          ssh-key: ${{ secrets.YOMITUBE_SYNC_DEPLOY_KEY }}
+
+      - name: Fast-forward ${{ env.BASE }}
+        if: needs.check-merge.result == 'success'
+        run: |
+          # Fails (and so never rewrites history) if BASE moved in the meantime.
+          git push origin "HEAD:refs/heads/$BASE"
+          git push origin --delete "$BRANCH"
+          echo "Merged NewPipe \`$TAG\` into \`$BASE\`; the build passed. Tag a release after a quick on-phone check." >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Open an issue about the failing build
+        if: needs.check-merge.result != 'success'
+        run: |
+          title="NewPipe $TAG: merges cleanly but the build fails"
+          if [ -z "$(gh issue list --state open --search "\"$title\" in:title" --json title --jq ".[] | select(.title == \"$title\") | .title")" ]; then
+            gh issue create --title "$title" --body "NewPipe \`$TAG\` merged into \`$BASE\` without conflicts, but the build (unit tests, checkstyle, ktlint or the APK) failed, so \`$BASE\` was left alone.
+
+          The merge is on branch \`$BRANCH\`. Log: $RUN_URL"
+          fi
+          exit 1
+
+  # ------------------------------------------------------------------ dictionary
+  dictionary:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: mining
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      # Builds and checks a new release (warming the cache for the next build), or opens an issue.
+      - name: Dictionary
+        id: jmdict
+        uses: ./.github/actions/jmdict
+        with:
+          tag: ${{ inputs.jmdict-tag || '' }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Remind to release if the shipped dictionary is old
+        if: steps.jmdict.outputs.fell-back != 'true'
+        env:
+          DICT_TAG: ${{ steps.jmdict.outputs.release-tag }}
+        run: |
+          latest=$(gh release list --exclude-drafts --exclude-pre-releases --limit 1 --json tagName,publishedAt --jq '.[0] // empty')
+          if [ -z "$latest" ]; then
+            echo "No YomiTube release yet; nothing to remind about."; exit 0
+          fi
+          rel_tag=$(jq -r .tagName <<<"$latest"); rel_date=$(jq -r .publishedAt <<<"$latest")
+          shipped=$(gh release view "$rel_tag" --json body --jq .body | grep -oE 'jmdict-simplified `[^`]+`' | head -1 | tr -d '`' | cut -d' ' -f2)
+          age_days=$(( ( $(date +%s) - $(date -d "$rel_date" +%s) ) / 86400 ))
+          echo "Latest YomiTube release $rel_tag ($age_days days old) ships JMdict $shipped; newest is $DICT_TAG."
+          if [ "$shipped" = "$DICT_TAG" ] || [ "$age_days" -le 30 ]; then exit 0; fi
+          title="Dictionary update available: tag a release"
+          body="The latest YomiTube release, \`$rel_tag\`, is $age_days days old and ships JMdict \`${shipped:-unknown}\`. jmdict-simplified \`$DICT_TAG\` has been built and passes the check.
+
+          The JMdict licence requires a procedure for regularly updating the data, so tag a new release (e.g. bump the \`-yt.N\` number). This issue is updated daily until then."
+          existing=$(gh issue list --state open --search "\"$title\" in:title" --json number,title --jq ".[] | select(.title == \"$title\") | .number")
+          if [ -n "$existing" ]; then
+            gh issue edit "$existing" --body "$body"
+          else
+            gh issue create --title "$title" --body "$body"
+          fi

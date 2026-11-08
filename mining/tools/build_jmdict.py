@@ -17,7 +17,7 @@ Only the Python standard library is used.
 
 Schema (read by Dictionary.java -- keep in sync):
     meta(key TEXT PRIMARY KEY, value TEXT)
-        schema=1, jmdict_version, dict_date
+        schema=1, jmdict_version, dict_date, release_tag (jmdict-simplified release; "" for --json)
     entry(id INTEGER PRIMARY KEY, senses TEXT)
         senses: senses separated by U+001E; inside a sense, the POS list and the
         gloss list are separated by U+001F; POS tags (JMdict codes such as
@@ -53,26 +53,36 @@ GLOSS_SEP = "\x1d"
 BAD_FORM_TAGS = {"iK", "ik", "io", "oK", "ok", "rK", "rk", "sK", "sk"}
 
 
+def github_get(url):
+    req = urllib.request.Request(url, headers={"Accept": "application/vnd.github+json"})
+    token = os.environ.get("GITHUB_TOKEN")
+    if token and url.startswith("https://api.github.com/"):
+        req.add_header("Authorization", f"Bearer {token}")  # avoids CI rate limits
+    return urllib.request.urlopen(req, timeout=120)
+
+
 def find_asset(tag):
+    """Returns (release tag, download URL of the full jmdict-eng JSON archive)."""
     url = f"https://api.github.com/repos/{REPO}/releases/" + (f"tags/{tag}" if tag else "latest")
-    with urllib.request.urlopen(url) as r:
+    with github_get(url) as r:
         rel = json.load(r)
     for a in rel["assets"]:
         n = a["name"]
         if n.startswith("jmdict-eng-") and not n.startswith("jmdict-eng-common") and n.endswith(".json.tgz"):
-            return a["browser_download_url"]
+            return rel["tag_name"], a["browser_download_url"]
     sys.exit(f"No full jmdict-eng .json.tgz asset in release {rel.get('tag_name')}")
 
 
 def download_json(tag):
-    url = find_asset(tag)
+    """Returns (release tag, parsed JSON)."""
+    tag, url = find_asset(tag)
     print(f"Downloading {url}", file=sys.stderr)
-    with urllib.request.urlopen(url) as r:
+    with github_get(url) as r:
         data = r.read()
     with tarfile.open(fileobj=io.BytesIO(data), mode="r:gz") as tf:
         for m in tf.getmembers():
             if m.isfile() and m.name.endswith(".json"):
-                return json.load(tf.extractfile(m))
+                return tag, json.load(tf.extractfile(m))
     sys.exit("No .json inside the downloaded archive")
 
 
@@ -80,7 +90,7 @@ def applies(lst, text):
     return "*" in lst or text in lst
 
 
-def build(d, out):
+def build(d, out, release_tag=""):
     tmp = out + ".tmp"
     if os.path.exists(tmp):
         os.remove(tmp)
@@ -101,6 +111,7 @@ def build(d, out):
     db.execute("INSERT INTO meta VALUES('schema','1')")
     db.execute("INSERT INTO meta VALUES('jmdict_version',?)", (d.get("version", ""),))
     db.execute("INSERT INTO meta VALUES('dict_date',?)", (d.get("dictDate", ""),))
+    db.execute("INSERT INTO meta VALUES('release_tag',?)", (release_tag,))
 
     entries = []
     forms = []
@@ -163,16 +174,22 @@ def main():
     ap.add_argument("--json", help="path to an extracted jmdict-eng-*.json (skips download)")
     ap.add_argument("--tag", help="jmdict-simplified release tag (default: latest)")
     ap.add_argument("--out", default=DEFAULT_OUT)
+    ap.add_argument("--print-latest-tag", action="store_true",
+                    help="only print the latest release tag and exit (used by CI)")
     a = ap.parse_args()
+    if a.print_latest_tag:
+        print(find_asset(None)[0])
+        return
+    release_tag = ""
     if a.json:
         with open(a.json, encoding="utf-8") as f:
             d = json.load(f)
     else:
-        d = download_json(a.tag)
+        release_tag, d = download_json(a.tag)
     if d.get("commonOnly"):
         sys.exit("Refusing to build from the common-only subset; use the full jmdict-eng release")
     os.makedirs(os.path.dirname(os.path.abspath(a.out)), exist_ok=True)
-    build(d, os.path.abspath(a.out))
+    build(d, os.path.abspath(a.out), release_tag)
 
 
 if __name__ == "__main__":

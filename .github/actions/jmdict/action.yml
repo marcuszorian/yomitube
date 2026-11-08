@@ -1,0 +1,131 @@
+# Mining fork (YomiTube): puts the latest good JMdict database at mining/src/main/assets/jmdict.db.
+#
+# The database is never committed. Each run asks jmdict-simplified for its latest release, restores
+# that build from the Actions cache, or builds and sanity-checks it on a miss. If the latest release
+# can't be downloaded, built or checked, the most recent good cached database is used instead and an
+# issue is opened, so a broken upstream release never ships. See plan-github-builds.md, section 0.
+#
+# Needs: actions/checkout, Python 3 on PATH, and `issues: write` permission for the failure issue.
+name: JMdict dictionary
+description: Restore or build the latest JMdict database, falling back to the last good one
+inputs:
+  tag:
+    description: jmdict-simplified release tag to use instead of the latest (for testing the fallback)
+    required: false
+    default: ""
+  github-token:
+    description: Token used for the GitHub API (rate limits) and for opening the failure issue
+    required: true
+outputs:
+  release-tag:
+    description: jmdict-simplified release the database was built from
+    value: ${{ steps.result.outputs.release-tag }}
+  dict-date:
+    description: JMdict date recorded in the database
+    value: ${{ steps.result.outputs.dict-date }}
+  fell-back:
+    description: "'true' if the wanted release failed and an older cached database was used"
+    value: ${{ steps.result.outputs.fell-back }}
+runs:
+  using: composite
+  steps:
+    - name: Find the wanted dictionary release
+      id: want
+      shell: bash
+      env:
+        GITHUB_TOKEN: ${{ inputs.github-token }}
+        INPUT_TAG: ${{ inputs.tag }}
+      run: |
+        if [ -n "$INPUT_TAG" ]; then
+          tag="$INPUT_TAG"
+        elif ! tag=$(python3 -I mining/tools/build_jmdict.py --print-latest-tag); then
+          echo "::warning::Could not ask GitHub for the latest jmdict-simplified release"
+          tag="unknown"
+        fi
+        echo "tag=$tag" >> "$GITHUB_OUTPUT"
+        # Cache keys can't contain every character; '+' is fine but be safe.
+        echo "key=jmdict-v1-$(printf '%s' "$tag" | tr -c 'A-Za-z0-9._+-' '_')" >> "$GITHUB_OUTPUT"
+        echo "Wanted jmdict-simplified release: $tag"
+
+    - name: Restore that release from the cache
+      id: exact
+      if: steps.want.outputs.tag != 'unknown'
+      uses: actions/cache/restore@v5
+      with:
+        path: mining/src/main/assets/jmdict.db
+        key: ${{ steps.want.outputs.key }}
+
+    - name: Build it (new release)
+      id: build
+      if: steps.want.outputs.tag != 'unknown' && steps.exact.outputs.cache-hit != 'true'
+      shell: bash
+      continue-on-error: true
+      env:
+        GITHUB_TOKEN: ${{ inputs.github-token }}
+        TAG: ${{ steps.want.outputs.tag }}
+      run: |
+        set -o pipefail
+        python3 -I mining/tools/build_jmdict.py --tag "$TAG" 2>&1 | tee /tmp/jmdict-build.log
+        python3 -I mining/tools/check_jmdict.py 2>&1 | tee -a /tmp/jmdict-build.log
+
+    - name: Save the new build to the cache
+      if: steps.build.outcome == 'success'
+      uses: actions/cache/save@v5
+      with:
+        path: mining/src/main/assets/jmdict.db
+        key: ${{ steps.want.outputs.key }}
+
+    - name: Fall back to the most recent good database
+      id: fallback
+      if: steps.exact.outputs.cache-hit != 'true' && steps.build.outcome != 'success'
+      uses: actions/cache/restore@v5
+      with:
+        path: mining/src/main/assets/jmdict.db
+        # Prefix match: the most recently saved jmdict-v1-* entry. Only checked builds are saved.
+        key: jmdict-v1-none
+        restore-keys: jmdict-v1-
+
+    - name: Check and report
+      id: result
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.github-token }}
+        WANT: ${{ steps.want.outputs.tag }}
+        FELL_BACK: ${{ steps.exact.outputs.cache-hit != 'true' && steps.build.outcome != 'success' }}
+        RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      run: |
+        if ! out=$(python3 -I mining/tools/check_jmdict.py); then
+          echo "::error::No usable JMdict database (release $WANT failed and nothing good is cached)."
+          echo "Fix: run python3 mining/tools/build_jmdict.py --tag <previous release> locally to find a good one, then rerun with the 'jmdict-tag' input."
+          exit 1
+        fi
+        got_tag=$(cut -f1 <<<"$out"); got_date=$(cut -f2 <<<"$out")
+        {
+          echo "release-tag=$got_tag"
+          echo "dict-date=$got_date"
+          echo "fell-back=$FELL_BACK"
+        } >> "$GITHUB_OUTPUT"
+        echo "### Dictionary" >> "$GITHUB_STEP_SUMMARY"
+        echo "JMdict from jmdict-simplified \`$got_tag\` (dated $got_date)." >> "$GITHUB_STEP_SUMMARY"
+        if [ "$FELL_BACK" = "true" ]; then
+          echo "::warning::jmdict-simplified release $WANT failed; using the last good database ($got_tag)"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "> [!WARNING]" >> "$GITHUB_STEP_SUMMARY"
+          echo "> Release \`$WANT\` failed to download, build or pass the check, so this build uses the last good database (\`$got_tag\`)." >> "$GITHUB_STEP_SUMMARY"
+          # "unknown" = the GitHub API lookup failed (usually transient): warn, don't open an issue.
+          title="JMdict release $WANT failed the build check"
+          if [ "$WANT" != "unknown" ] && [ -z "$(gh issue list --state open --search "\"$title\" in:title" --json title --jq ".[] | select(.title == \"$title\") | .title")" ]; then
+            {
+              echo "The dictionary step could not use jmdict-simplified release \`$WANT\`, so builds fall back to the last good cached database (\`$got_tag\`). Nothing broken has shipped."
+              echo
+              echo "Log: $RUN_URL"
+              echo
+              echo '```'
+              tail -n 30 /tmp/jmdict-build.log 2>/dev/null
+              echo '```'
+              echo
+              echo "Close this once a newer release builds cleanly; the daily sync job reopens it if it still fails."
+            } > /tmp/jmdict-issue.md
+            gh issue create --title "$title" --body-file /tmp/jmdict-issue.md || echo "::warning::Could not open an issue"
+          fi
+        fi
