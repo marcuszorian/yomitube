@@ -1,6 +1,6 @@
 <p align="center"><img src="assets/yomitube/icon.png" width="120" alt="YomiTube icon"></p>
 <h2 align="center"><b>YomiTube</b></h2>
-<h4 align="center">Sentence mining for Japanese learners, inside a streaming front-end for Android.</h4>
+<h4 align="center">Sentence mining from Youtube videos, for Japanese learners.</h4>
 <p align="center"><a href="https://github.com/marcuszorian/yomitube/actions/workflows/yomitube-build.yml"><img src="https://github.com/marcuszorian/yomitube/actions/workflows/yomitube-build.yml/badge.svg?branch=mining" alt="Build status"></a></p>
 
 > **YomiTube is neither affiliated with nor endorsed by TeamNewPipe or NewPipe e.V.**
