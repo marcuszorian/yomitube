@@ -38,7 +38,7 @@ public final class AnkiExporter {
     public static final String PREF_KEY_DECK_ID = "ankiDeckId";
 
     public static final String PERMISSION = AddContentApi.READ_WRITE_PERMISSION;
-    public static final String TAG = "newpipe-mining";
+    public static final String TAG = "yomitube";
 
     public enum Status {
         OK,
