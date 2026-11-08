@@ -109,6 +109,8 @@ configure<ApplicationExtension> {
             initWith(getByName("release"))
             signingConfig = signingConfigs.getByName("debug")
             isDefault = true
+            // Mining fork: :mining has no "continuous" build type; use its release variant.
+            matchingFallbacks += listOf("release")
 
             // suffix the app id and the app name with git branch name
             if (normalizedWorkingBranch.isEmpty() || workingBranch in defaultBranches) {
