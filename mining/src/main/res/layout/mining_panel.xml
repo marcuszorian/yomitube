@@ -180,21 +180,6 @@
                         android:layout_height="wrap_content"
                         android:text="@string/mining_other_meanings"
                         android:visibility="gone" />
-
-                    <com.google.android.material.checkbox.MaterialCheckBox
-                        android:id="@+id/mining_word_audio_include"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:checked="true"
-                        android:text="@string/mining_word_audio" />
-
-                    <ImageButton
-                        android:id="@+id/mining_word_speak"
-                        android:layout_width="40dp"
-                        android:layout_height="40dp"
-                        android:background="?attr/selectableItemBackgroundBorderless"
-                        android:contentDescription="@string/mining_word_speak"
-                        android:src="@drawable/ic_mining_play_arrow_24dp" />
                 </LinearLayout>
 
                 <EditText

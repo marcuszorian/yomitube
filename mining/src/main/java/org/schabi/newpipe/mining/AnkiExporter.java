@@ -383,15 +383,8 @@ public final class AnkiExporter {
             if (soundTag == null) {
                 return Result.error("AnkiDroid could not import the audio clip");
             }
+            // Only SentenceAudio: the word Audio field is deliberately left empty.
             values.put(NoteFieldMapper.SENTENCE_AUDIO, soundTag);
-            values.put(NoteFieldMapper.AUDIO, soundTag);
-        }
-        if (card.wordAudio != null) {
-            // Word TTS replaces the sentence-clip fallback; a failed import keeps the fallback.
-            String wordTag = importMedia(api, card.wordAudio, "audio");
-            if (wordTag != null) {
-                values.put(NoteFieldMapper.AUDIO, wordTag);
-            }
         }
         if (card.picture != null && NoteFieldMapper.indexOf(modelFields, NoteFieldMapper.PICTURE) >= 0) {
             // Picture is optional: a failed import leaves it empty rather than losing the card.

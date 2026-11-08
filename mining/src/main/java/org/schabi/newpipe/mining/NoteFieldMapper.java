@@ -20,9 +20,12 @@ public final class NoteFieldMapper {
     public static final String GRAPH = "Graph";
     public static final String HINT = "Hint";
 
-    /** Fields the note type must contain for export to work. Picture/Graph/Hint are optional. */
+    /**
+     * Fields the note type must contain for export to work. Picture/Audio/Graph/Hint are optional;
+     * Audio (word audio) is never filled.
+     */
     public static final List<String> REQUIRED_FIELDS = Collections.unmodifiableList(
-            Arrays.asList(FRONT, GLOSSARY, SENTENCE, AUDIO, SENTENCE_AUDIO));
+            Arrays.asList(FRONT, GLOSSARY, SENTENCE, SENTENCE_AUDIO));
 
     public static final class MissingFieldsException extends Exception {
         public final List<String> missing;

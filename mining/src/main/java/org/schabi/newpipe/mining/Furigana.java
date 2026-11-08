@@ -115,26 +115,6 @@ public final class Furigana {
     private static final java.util.regex.Pattern RUBY =
             java.util.regex.Pattern.compile(" ?([^ >]+?)\\[(.+?)\\]");
 
-    /**
-     * What to speak for a Front value: each {@code base[reading]} replaced by its reading, spaces
-     * removed. {@code 取[と]り 扱[あつか]う} → {@code とりあつかう}; {@code テレビ} → {@code テレビ}.
-     * HTML tags are stripped. Kanji without brackets (user-typed) are left as is.
-     */
-    public static String toSpeech(String front) {
-        if (front == null) return "";
-        String s = front.replaceAll("<[^>]*>", "");
-        java.util.regex.Matcher m = RUBY.matcher(s);
-        StringBuilder sb = new StringBuilder();
-        int last = 0;
-        while (m.find()) {
-            sb.append(s, last, m.start());
-            sb.append(m.group(2));
-            last = m.end();
-        }
-        sb.append(s.substring(last));
-        return sb.toString().replaceAll("[\\s\\u3000]+", "");
-    }
-
     private static String sanitizeReading(String r) {
         return r.replaceAll("[\\s\\[\\]]", "");
     }

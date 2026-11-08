@@ -40,24 +40,4 @@ public class FuriganaTest {
         check("ラーメン 屋[や]", "ラーメン屋", "らーめんや");
     }
 
-    @Test public void speechUsesReadings() {
-        assertEquals("とりあつかう", Furigana.toSpeech("取[と]り 扱[あつか]う"));
-        assertEquals("もぎせん", Furigana.toSpeech("模擬戦[もぎせん]"));
-        assertEquals("おちゃ", Furigana.toSpeech("お 茶[ちゃ]"));
-        assertEquals("ゲームき", Furigana.toSpeech("ゲーム 機[き]"));
-    }
-
-    @Test public void speechWithoutBrackets() {
-        assertEquals("テレビ", Furigana.toSpeech("テレビ"));
-        assertEquals("ありがとう", Furigana.toSpeech(" ありがとう "));
-        assertEquals("模擬戦", Furigana.toSpeech("模擬戦"));
-        assertEquals("", Furigana.toSpeech(null));
-    }
-
-    @Test public void speechRoundTripsFormat() {
-        String[][] cases = {{"始める", "はじめる"}, {"お見舞い", "おみまい"}, {"為る", "する"}};
-        for (String[] c : cases) {
-            assertEquals(c[1], Furigana.toSpeech(Furigana.format(c[0], c[1])));
-        }
-    }
 }

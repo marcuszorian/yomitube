@@ -9,10 +9,6 @@
         <!-- AnkiDroid (status, note types, decks) -->
         <package android:name="com.ichi2.anki" />
         <provider android:authorities="com.ichi2.anki.flashcards" />
-        <!-- Text-to-speech engines for word audio; hidden on Android 11+ without this -->
-        <intent>
-            <action android:name="android.intent.action.TTS_SERVICE" />
-        </intent>
     </queries>
 
     <application>

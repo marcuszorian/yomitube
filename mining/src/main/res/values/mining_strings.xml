@@ -32,11 +32,6 @@
     <string name="mining_audio">Audio</string>
     <string name="mining_play">Play</string>
     <string name="mining_add">Add to Anki</string>
-    <string name="mining_word_audio">Word audio</string>
-    <string name="mining_word_speak">Speak the word</string>
-    <string name="mining_word_audio_unavailable">%1$s — word audio will use the sentence clip</string>
-    <string name="mining_install_voice">Install voice</string>
-    <string name="mining_saved_no_word_audio">Added to Anki: %1$s (word audio failed: %2$s)</string>
     <string name="mining_picture">Picture</string>
     <string name="mining_picture_retake">Retake</string>
     <string name="mining_picture_failed">No picture: %1$s</string>

@@ -109,9 +109,6 @@ public final class MiningPanel {
     private final android.widget.CompoundButton pictureInclude;
     private final android.widget.ImageView pictureView;
     private final MaterialButton pictureRetake;
-    private final android.widget.CompoundButton wordAudioInclude;
-    private final ImageButton wordSpeak;
-    private final WordSpeech speech;
     private final MaterialButton settingsButton;
     private final ProgressBar progress;
     private final MaterialButton addButton;
@@ -217,9 +214,6 @@ public final class MiningPanel {
         pictureInclude = root.findViewById(R.id.mining_picture_include);
         pictureView = root.findViewById(R.id.mining_picture);
         pictureRetake = root.findViewById(R.id.mining_picture_retake);
-        wordAudioInclude = root.findViewById(R.id.mining_word_audio_include);
-        wordSpeak = root.findViewById(R.id.mining_word_speak);
-        speech = new WordSpeech(activity, this::onSpeechStateKnown);
         settingsButton = root.findViewById(R.id.mining_settings);
         progress = root.findViewById(R.id.mining_progress);
         addButton = root.findViewById(R.id.mining_add);
@@ -269,7 +263,6 @@ public final class MiningPanel {
         stopPreview();
         clipper.cancel();
         worker.shutdownNow();
-        speech.shutdown();
         hideKeyboard();
         if (Build.VERSION.SDK_INT >= 33 && backCallback != null) {
             BackCompat.unregister(activity, backCallback);
@@ -363,14 +356,6 @@ public final class MiningPanel {
             }
         });
         playButton.setOnClickListener(v -> startPreview(trimStart, trimEnd));
-        wordSpeak.setOnClickListener(v -> {
-            stopPreview();
-            if (speech.getState() == WordSpeech.State.READY) {
-                speech.speak(Furigana.toSpeech(frontEdit.getText().toString()));
-            } else {
-                showSpeechProblem();
-            }
-        });
         pictureRetake.setOnClickListener(v -> {
             stopPreview();
             capturePicture();
@@ -716,8 +701,6 @@ public final class MiningPanel {
         final long start = trimStart;
         final long end = trimEnd;
         final File picture = pictureInclude.isChecked() ? pictureFile : null;
-        final boolean wantWordAudio = wordAudioInclude.isChecked();
-        final String spoken = Furigana.toSpeech(front);
         final int gen = ++saveGeneration;
         setSaving(true, R.string.mining_saving_check);
 
@@ -730,75 +713,13 @@ public final class MiningPanel {
                     return;
                 }
                 setSaving(true, R.string.mining_saving_clip);
-                // Word TTS and the sentence clip run in parallel; the card is added once both finish.
-                final SaveJoin join = new SaveJoin(gen, front, glossary, sentenceHtml, picture);
-                if (wantWordAudio) {
-                    speech.synthesizeToFile(spoken, new WordSpeech.FileCallback() {
-                        @Override
-                        public void onSpeechFile(@NonNull File file) {
-                            join.wordAudio(file, null);
-                        }
-
-                        @Override
-                        public void onSpeechError(@NonNull String message) {
-                            join.wordAudio(null, message);
-                        }
-                    });
-                } else {
-                    join.wordAudio(null, null);
-                }
-                clip(gen, audioSource, start, end, join::sentenceAudio);
+                clip(gen, audioSource, start, end, clipFile -> {
+                    MinedCard card = new MinedCard(front, glossary, sentenceHtml,
+                            Uri.fromFile(clipFile), picture != null ? Uri.fromFile(picture) : null);
+                    addToAnki(gen, card, clipFile);
+                });
             });
         });
-    }
-
-    /** Waits for the word TTS file and the sentence clip, then adds the card. */
-    private final class SaveJoin {
-        final int gen;
-        final String front;
-        final String glossary;
-        final String sentenceHtml;
-        @Nullable
-        final File picture;
-        boolean wordDone;
-        @Nullable
-        File wordFile;
-        @Nullable
-        String wordError;
-        @Nullable
-        File clipFile;
-
-        SaveJoin(int gen, String front, String glossary, String sentenceHtml, @Nullable File picture) {
-            this.gen = gen;
-            this.front = front;
-            this.glossary = glossary;
-            this.sentenceHtml = sentenceHtml;
-            this.picture = picture;
-        }
-
-        void wordAudio(@Nullable File file, @Nullable String error) {
-            if (closed || gen != saveGeneration) {
-                deleteQuietly(file);
-                return;
-            }
-            wordDone = true;
-            wordFile = file;
-            wordError = error;
-            maybeAdd();
-        }
-
-        void sentenceAudio(File clip) {
-            clipFile = clip;
-            maybeAdd();
-        }
-
-        private void maybeAdd() {
-            if (!wordDone || clipFile == null) return;
-            MinedCard card = new MinedCard(front, glossary, sentenceHtml, Uri.fromFile(clipFile),
-                    picture != null ? Uri.fromFile(picture) : null,
-                    wordFile != null ? Uri.fromFile(wordFile) : null);
-            addToAnki(gen, card, wordError, clipFile, wordFile);
-        }
     }
 
     private static void deleteQuietly(@Nullable File f) {
@@ -833,17 +754,15 @@ public final class MiningPanel {
      * Adds the card, then deletes the audio files: AnkiDroid has copied them into its own media
      * folder by then (or the add failed, and the next attempt records them again).
      */
-    private void addToAnki(int gen, MinedCard card, @Nullable String wordError, File... audioFiles) {
+    private void addToAnki(int gen, MinedCard card, File... audioFiles) {
         runInBackground(() -> {
             AnkiExporter.Result r = exporter.add(card);
             for (File f : audioFiles) deleteQuietly(f);
             main.post(() -> {
                 if (closed || gen != saveGeneration) return;
                 if (r.kind == AnkiExporter.Result.Kind.SUCCESS) {
-                    String msg = wordError == null
-                            ? ui.getString(R.string.mining_saved, card.front)
-                            : ui.getString(R.string.mining_saved_no_word_audio, card.front, wordError);
-                    Toast.makeText(activity, msg, wordError == null ? Toast.LENGTH_SHORT : Toast.LENGTH_LONG).show();
+                    Toast.makeText(activity, ui.getString(R.string.mining_saved, card.front),
+                            Toast.LENGTH_SHORT).show();
                     saving = false;
                     close(true);
                 } else {
@@ -878,39 +797,7 @@ public final class MiningPanel {
 
     private void setStatus(String text, boolean offerSettings) {
         status.setText(text);
-        if (offerSettings) {
-            // The button is also reused for "Install voice"; restore its Settings role.
-            settingsButton.setText(R.string.mining_settings);
-            settingsButton.setOnClickListener(v -> listener.onOpenSettings());
-        }
         settingsButton.setVisibility(offerSettings ? View.VISIBLE : View.GONE);
-    }
-
-    // ------------------------------------------------------------------ word audio
-
-    private void onSpeechStateKnown() {
-        if (closed) return;
-        if (speech.getState() != WordSpeech.State.READY) {
-            // Default to off so saving doesn't silently fall back; the user can still tick it.
-            wordAudioInclude.setChecked(false);
-            showSpeechProblem();
-        }
-    }
-
-    private void showSpeechProblem() {
-        setStatus(ui.getString(R.string.mining_word_audio_unavailable, speech.describeProblem()), false);
-        if (speech.getState() == WordSpeech.State.NO_JAPANESE) {
-            settingsButton.setText(R.string.mining_install_voice);
-            settingsButton.setVisibility(View.VISIBLE);
-            settingsButton.setOnClickListener(v -> {
-                try {
-                    activity.startActivity(WordSpeech.isGoogleTtsDisabled(activity)
-                            ? WordSpeech.enableGoogleTtsIntent() : WordSpeech.installVoiceIntent());
-                } catch (RuntimeException e) {
-                    Log.w(TAG, "No TTS install screen", e);
-                }
-            });
-        }
     }
 
     // ------------------------------------------------------------------ picture
