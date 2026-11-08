@@ -1,9 +1,13 @@
+<p align="center"><img src="assets/yomitube/icon.png" width="120" alt="YomiTube icon"></p>
 <h2 align="center"><b>YomiTube</b></h2>
 <h4 align="center">Sentence mining for Japanese learners, inside a streaming front-end for Android.</h4>
 
 > **YomiTube is neither affiliated with nor endorsed by TeamNewPipe or NewPipe e.V.**
 > It is an independent fork of [NewPipe](https://github.com/TeamNewPipe/NewPipe).
 > Builds of YomiTube are not official NewPipe releases and are not compatible with them.
+
+<p align="center"><img src="assets/yomitube/screenshot-mining.jpg" width="800" alt="The mining panel open over a video: the sentence 日本の文化、歌舞伎のニュースです split into words, 歌舞伎 selected, with its reading かぶき and English meaning filled in, and an Add to Anki button"></p>
+<p align="center"><sub>Video shown to illustrate the app: <a href="https://www.youtube.com/watch?v=JI53WTfMErs">「NHK やさしいことばニュース　歌舞伎についてのニュース」</a> by mamechan.</sub></p>
 
 ## What it adds
 
