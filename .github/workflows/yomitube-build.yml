@@ -50,7 +50,10 @@ jobs:
         with:
           java-version: 21
           distribution: temurin
-          cache: gradle
+
+      # Downloads (with retries) and caches the Gradle distribution and dependencies; the
+      # wrapper's own download gives up after 10 s with no retry.
+      - uses: gradle/actions/setup-gradle@v6
 
       - uses: actions/setup-python@v6
         with:
