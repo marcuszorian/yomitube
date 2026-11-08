@@ -28,6 +28,8 @@ configure<LibraryExtension> {
         minSdk {
             version = release(NEWPIPE_VERSION_SDK_MIN)
         }
+        // Keep rules for the app's shrunk (release/continuous) builds.
+        consumerProguardFiles("consumer-rules.pro")
     }
 
     compileOptions {
